@@ -31,3 +31,38 @@ Disks and Filesystems:
     + Linux có một thư mục đặc biệt, /mnt, thường được sử dụng làm điểm gắn tạm thời cho các hoạt động gắn và tháo gắn thủ công.
     + VD : sử dụng lệnh mount /dev/sdb1 /mnt để gắn hệ thống tệp vào phân vùng thứ 2 của ổ cứng thứ 2 tại thư mục /mnt.
     
+  - Adding disks:
+    + Khi bạn thêm đĩa mới vào Linux, bạn cần chuẩn bị chúng trước khi có thể sử dụng.
+    + Quá trình này bao gồm việc tạo phân vùng trên đĩa, tạo hệ thống tệp trên các phân vùng, sau đó gắn hệ thống tệp vào các thư mục trong cây thư mục của hệ thống.
+    + Điều này rất quan trọng, đặc biệt khi làm việc với nhiều ổ đĩa hoặc các đơn vị lưu trữ dữ liệu lớn để tạo trải nghiệm người dùng liền mạch.
+    + Cách tạo và add ổ đĩa mới:
+      . Sử dụng lsblk để liệt kê tất cả các thiết bị khối (đĩa và phân vùng).
+      . Sử dụng fdisk /dev/sdX để tạo một phân vùng mới trên đĩa.
+      . Sử dụng mkfs.ext4 /dev/sdX1 để tạo một hệ thống tệp mới trên một phân vùng.
+      . Sử dụng mount /dev/sdX1 /mount/point để gắn hệ thống tệp vào một thư mục.
+
+  - swap:
+    + Nếu hệ thống cần nhiều tài nguyên bộ nhớ hơn và bộ nhớ vật lý đã đầy, các trang không hoạt động trong bộ nhớ sẽ được chuyển đến không gian hoán đổi.
+    + Không gian hoán đổi là một phần của ổ đĩa cứng được sử dụng cho bộ nhớ ảo.
+    + Không gian hoán đổi đảm bảo rằng bất cứ khi nào hệ thống của bạn sắp hết bộ nhớ vật lý, nó có thể di chuyển một số dữ liệu đến không gian hoán đổi, giải phóng không gian RAM, nhưng điều này đi kèm với những tác động về hiệu suất vì lưu trữ dựa trên đĩa chậm hơn RAM.
+    + Trong bối cảnh của đĩa và hệ thống tệp, không gian hoán đổi có thể tồn tại ở hai nơi:
+      . Trong phân vùng chuyên dụng của riêng nó.
+      . Trong một tệp thông thường trong hệ thống tệp hiện có.
+    + VD để thêm 1 tệp hoán đổi sử dụng lệnh fallocate -> dùng lệnh mkswap để làm tệp phù hợp với mục đích sử dụng hoán đổi.
+      . fallocate -l 1G /swapfile # tạo swap file.
+      . chmod 600 /swapfile # bảo mật swap file bằng cách ngăn chặn người dùng thông thường đọc nó.
+      . mkswap /swapfile # thiết lập vùng hoán đổi.
+      . swapon /swapfile # cho phép file hoán đổi.
+
+  - LVM:
+    + Linux Logical Volume Manager (LVM) là một thiết bị ánh xạ cung cấp quản lý ổ đĩa logic cho Linux kernel.
+    + Nó được tạo ra để dễ dàng quản lý đĩa, cho phép sử dụng các thiết bị lưu trữ trừu tượng, được gọi là ổ đĩa logic, thay vì sử dụng trực tiếp các thiết bị lưu trữ vật lý.
+    + LVM cực kỳ linh hoạt và các tính năng bao gồm thay đổi kích thước ổ đĩa, sao chép ổ đĩa trên nhiều đĩa vật lý và di chuyển ổ đĩa giữa các đĩa mà không cần tắt nguồn.
+    + LVM hoạt động trên 3 cấp độ: Ổ đĩa vật lý (PV), Nhóm ổ đĩa (VG) và Ổ đĩa logic (LV).
+      . PV là các ổ đĩa hoặc phân vùng thực tế.
+      . VG kết hợp các PV thành một nhóm lưu trữ duy nhất.
+      . LV tách các phần từ VG để hệ thống sử dụng.
+    + Để tạo LVM, sử dụng các câu lệnh sau:
+      . pvcreate /dev/sdb1: tạo ổ đĩa vật lý trên /dev/sdb1.
+      . vgcreate my-vg /dev/sdb1: tạo nhóm ổ đĩa tên my-vg.
+      . lvcreate -L 10G my-vg -n my-lv: thêm 10BG ổ đĩa vật lý cho nhóm ổ đĩa và đặt tên là my-lv.
